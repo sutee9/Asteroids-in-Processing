@@ -1,4 +1,4 @@
-class Shot {
+class Bullet {
   float speed = 10;
 
   //State
@@ -7,7 +7,7 @@ class Shot {
   float remainingLifetime;
   boolean alive = true;
 
-  Shot(float x, float y, float angle) {
+  Bullet(float x, float y, float angle) {
     position = new PVector(x, y);
     this.angle=angle;
     remainingLifetime = 200;

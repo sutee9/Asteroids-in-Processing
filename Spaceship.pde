@@ -1,10 +1,10 @@
 class Spaceship {
   //Config
-  float rotSpeed=0.11;
-  float accel = 0.091;
+  float rotSpeed=0.09;
+  float accel = 0.046;
   //float decay = 0.004; //Not working, the logic is wrong, remove it for now
-  int gunCooldownTime = 10;//frames
-  float gunOrigin = 20; //Pixels in X from center
+  int gunCooldownTime = 16;//frames
+  float gunOrigin = 14; //Pixels in X from center
 
   //shipState
   PVector position;
@@ -30,16 +30,6 @@ class Spaceship {
       force.y += accel*sin(angle);
       accelerating = true;
     } else {
-      //develerate when no input, but avoid moving backwards 
-      //This doesn't work properly: It accelerates the ship towards right and bottom
-      //force.x = force.x - decay*cos(angle);
-      //force.y = force.y - decay*sin(angle);
-      //if (force.x < 0) {
-      //  force.x = 0;
-      //}
-      //if (force.x < 0) {
-      //  force.y = 0;
-      ////}
       accelerating=false;
     }
     //Position
@@ -63,10 +53,10 @@ class Spaceship {
     }
   }
   
-  Shot shoot(){
+  Bullet shoot(){
     if (gunCooldown <= 0){
       gunCooldown = gunCooldownTime;
-      return new Shot(position.x+cos(angle)*gunOrigin, position.y+sin(angle)*gunOrigin, angle);
+      return new Bullet(position.x+cos(angle)*gunOrigin, position.y+sin(angle)*gunOrigin, angle);
     }
     else {
        return null; 
@@ -79,9 +69,16 @@ class Spaceship {
     
     rotate(angle);
     strokeWeight(1);
-    triangle(-20, -20, -20, 20, 20, 0);
-    popMatrix();
-
-    //Todo: If accelating, draw exhaust
+    line(-15, -10, 15, 0);
+    line(-15, 10, 15, 0);
+    ellipseMode(CENTER);
+    arc(-44, 0, 60, 60, -0.34, 0.34);
+    
+    if(accelerating){
+      translate(-15, 0);
+      line(0, -6, -11-2*sin(frameCount*2), 0);
+      line(0, 6, -11-2*sin(frameCount*2), 0);
+    }
+    popMatrix(); 
   }
 }
