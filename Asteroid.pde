@@ -54,6 +54,11 @@ class Asteroid {
       return 20;
     }
   }
+  
+  //Splits the asteroid in two parts and returns the new one
+  Asteroid split(){
+      return new Asteroid(position.x, position.y);
+  }
 
   boolean isCollidingWith(Bullet b) {
     //Generously collide with bullets (sizeClass * 20)

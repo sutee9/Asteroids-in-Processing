@@ -16,6 +16,8 @@ void setup() {
   ship = new Spaceship(width/2, height/2);
   bullets = new ArrayList<Bullet>();
   asteroids = new ArrayList<Asteroid>();
+  
+  textSize(20);
 }
 
 void draw() {
@@ -66,7 +68,8 @@ void draw() {
     asteroid.drawToScreen();
   }
   
-  text(score, 100, 100);
+  text(score, 80, 80);
+  displayLives();
 }
 
 void keyPressed() {
@@ -97,4 +100,18 @@ void keyReleased() {
   if (key == ' ') {
     shoot = false;
   }
+}
+
+void displayLives(){
+  pushMatrix();
+  translate(87,110);
+  float spacing = 17.0;
+  for (int i = 0; i < lives; i++){
+    strokeWeight(1);
+    line(i*spacing -7, 12, i*spacing, -12);
+    line(i*spacing + 7, 12, i*spacing, -12);
+    ellipseMode(CENTER);
+    arc(i*spacing, 34, 45, 45, PI+HALF_PI-0.29, PI+HALF_PI+0.29);
+  }
+  popMatrix();
 }

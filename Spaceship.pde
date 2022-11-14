@@ -63,6 +63,7 @@ class Spaceship {
     }
   }
 
+  //Draw the ship to the screen
   void drawToScreen() {
     pushMatrix();
     translate(position.x, position.y);
