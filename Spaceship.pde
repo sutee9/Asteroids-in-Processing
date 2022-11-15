@@ -4,15 +4,16 @@ class Spaceship {
   float accel = 0.046;
   //float decay = 0.004; //Not working, the logic is wrong, remove it for now
   int gunCooldownTime = 16;//frames
+  int respawnTime = 120; //frames
   float gunOrigin = 14; //Pixels in X from center
 
   //shipState
   PVector position;
   PVector force;
   float angle;
-  float speed;
   boolean accelerating = false;
   float gunCooldown = gunCooldownTime;
+  float respawnTimer = 0;
 
   Spaceship(float x, float y) {
     position = new PVector(x, y);
@@ -22,6 +23,14 @@ class Spaceship {
   void update() {
     if (gunCooldown > 0){
        gunCooldown--; 
+    }
+    
+    //Check if we have recently died and have to respawn the ship
+    if (respawnTimer > 0){
+       respawnTimer--;
+       if (respawnTimer <= 0){
+          respawnShip(); 
+       }
     }
     
     //Process Movement
@@ -53,6 +62,19 @@ class Spaceship {
     }
   }
   
+  /**
+   * Resets all the variables so that the ship returns into neutral position.
+   */
+  void respawnShip(){
+     position.x = width/2;
+     position.y = height/2;
+     force.x = 0.0;
+     force.y = 0.0;
+     angle = 0;
+  }
+  /**
+   * Shoots a bullet in the direction the ship is facing and returns it
+   */
   Bullet shoot(){
     if (gunCooldown <= 0){
       gunCooldown = gunCooldownTime;
@@ -62,9 +84,17 @@ class Spaceship {
        return null; 
     }
   }
+  
+  boolean isInvulnerable(){
+    println("Ship is invulnerable="+ (respawnTimer > 0)); 
+    return respawnTimer > 0;
+  }
 
   //Draw the ship to the screen
   void drawToScreen() {
+    if (isInvulnerable()){ //Don't draw the ship if it is invulnerable. TODO: This isn't cute. I should show it.
+       return; 
+    }
     pushMatrix();
     translate(position.x, position.y);
     
@@ -81,5 +111,9 @@ class Spaceship {
       line(0, 6, -11-2*sin(frameCount*2), 0);
     }
     popMatrix(); 
+  }
+  
+  void destroy(){
+      respawnTimer = respawnTime;
   }
 }

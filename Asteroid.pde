@@ -70,11 +70,16 @@ class Asteroid {
   }
 
   boolean isCollidingWith(Spaceship ship) {
-    //Be very generous when it comes to player collisions.
-    if (dist(ship.position.x, ship.position.y, this.position.x, this.position.y) < sizeClass*15) {
-      return true;
-    } else {
-      return false;
+    if (ship.isInvulnerable()){
+       return false; 
+    }
+    else {
+      //Be very generous when it comes to player collisions.
+      if (dist(ship.position.x, ship.position.y, this.position.x, this.position.y) < sizeClass*15) {
+        return true;
+      } else {
+        return false;
+      }
     }
   }
 }

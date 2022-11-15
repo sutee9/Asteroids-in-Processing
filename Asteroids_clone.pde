@@ -8,7 +8,16 @@ boolean forward = false;
 boolean shoot = false;
 
 int score = 0;
-int lives = 3;
+int defaultNumLives = 3;
+int lives = defaultNumLives;
+
+final int STATE_TITLESCREEN = 1;
+final int STATE_GAME = 2;
+final int STATE_GAMEOVER = 3;
+int state;
+
+float timer1;
+float timer2;
 
 void setup() {
   size(600, 600);
@@ -16,16 +25,45 @@ void setup() {
   ship = new Spaceship(width/2, height/2);
   bullets = new ArrayList<Bullet>();
   asteroids = new ArrayList<Asteroid>();
-  
-  textSize(20);
+  setState(STATE_TITLESCREEN); 
 }
 
 void draw() {
+  switch(state){
+      case STATE_TITLESCREEN:
+        drawTitleScreen();
+        break;
+      case STATE_GAME:
+        drawGame();
+        break;
+      case STATE_GAMEOVER:
+        drawGameOver();
+        break;
+  }
+}
+
+void drawTitleScreen(){
+   background(0);
+   fill(255);
+   textSize(30);
+   text("Asteroids", 220, 200);
+   textSize(20);
+   text("Press any button to start", 180, 300);
+   
+   if (keyPressed){
+      setState(STATE_GAME); 
+   }
+}
+
+void drawGame(){
   background(0);
   stroke(255);
   noFill();
 
-  //Perform all update operatiions
+  //PERFORM ALL UPDATE OPERATIONS
+  if (lives <= 0){
+     setState(STATE_GAMEOVER); 
+  }
   ship.update();
 
   for (int i= bullets.size()-1; i >= 0; i--) {
@@ -36,10 +74,12 @@ void draw() {
     }
   }
 
-  //Update Asteroids and check if they collided with bullets
+  //Update Asteroids and check if they collided with bullets or the ship
   for (int i= asteroids.size()-1; i >= 0; i--) {
     Asteroid asteroid = asteroids.get(i);
     asteroid.update();
+    
+    //Check if collided with bullets
     for (int k= bullets.size()-1; k >= 0; k--) {
       Bullet bullet = bullets.get(k);
       
@@ -49,8 +89,13 @@ void draw() {
          score += asteroid.getScore();    
       }
     }
+    
+    //Check if collision with ship
+    if (asteroid.isCollidingWith(ship)){
+       lives--;
+       ship.destroy();
+    }
   }
-
   if (shoot) {
     Bullet bullet = ship.shoot();
     if (bullet != null) {
@@ -59,7 +104,7 @@ void draw() {
     }
   }
 
-  //draw everything to the screen
+  //DRAW EVERYTHING TO THE SCREEN
   ship.drawToScreen();
   for (Bullet bullet : bullets) {
     bullet.drawToScreen();
@@ -67,41 +112,15 @@ void draw() {
   for (Asteroid asteroid : asteroids) {
     asteroid.drawToScreen();
   }
-  
+  textSize(20);
   text(score, 80, 80);
   displayLives();
 }
 
-void keyPressed() {
-  if (keyCode == LEFT) {
-    left=true;
-  }
-  if (keyCode == RIGHT) {
-    right=true;
-  }
-  if (keyCode == UP) {
-    forward = true;
-  }
-  if (key == ' ') {
-    shoot = true;
-  }
-}
-
-void keyReleased() {
-  if (keyCode == LEFT) {
-    left=false;
-  }
-  if (keyCode == RIGHT) {
-    right=false;
-  }
-  if (keyCode == UP) {
-    forward = false;
-  }
-  if (key == ' ') {
-    shoot = false;
-  }
-}
-
+/**
+ * Displays as many space ships in the 
+ * uppper left corner as I have lives.
+ */
 void displayLives(){
   pushMatrix();
   translate(87,110);
@@ -114,4 +133,43 @@ void displayLives(){
     arc(i*spacing, 34, 45, 45, PI+HALF_PI-0.29, PI+HALF_PI+0.29);
   }
   popMatrix();
+}
+
+void drawGameOver(){
+   timer1 = timer1 - 1.0/(float)frameRate; //frame independent countdown
+   if (timer1 < 0){
+      setState(STATE_TITLESCREEN); 
+   }
+   background(0);
+   fill(255);
+   textSize(20);
+   
+   text("Game Over", width/2-textWidth("Game Over")/2.0, 200);
+}
+
+
+
+/**
+ * Use this function to initialise and clean up all 
+ * variables when switching into a new state 
+ */
+void setState(int newState) {
+  //Only change state if it's different from the current state
+  if (newState == state) {
+    return;
+  }
+  
+  //Set the new state
+  println("Setting new State="+newState);
+  state = newState;
+  switch(newState) {
+    case STATE_TITLESCREEN:
+      break;
+    case STATE_GAME:
+      lives = defaultNumLives;
+      break;
+    case STATE_GAMEOVER:
+      timer1 = 3.0; //3 seconds
+      break;
+  }
 }
