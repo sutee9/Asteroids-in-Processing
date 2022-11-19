@@ -55,11 +55,12 @@ class Spaceship {
 
     //Rotation
     if (left) {
-      angle += rotSpeed;
-    }
-    if (right) {
       angle -= rotSpeed;
     }
+    if (right) {
+      angle += rotSpeed;
+    }
+    angle = angle% TWO_PI;
   }
   
   /**
@@ -86,7 +87,7 @@ class Spaceship {
   }
   
   boolean isInvulnerable(){
-    println("Ship is invulnerable="+ (respawnTimer > 0)); 
+    //println("Ship is invulnerable="+ (respawnTimer > 0)); 
     return respawnTimer > 0;
   }
 
@@ -98,6 +99,7 @@ class Spaceship {
     pushMatrix();
     translate(position.x, position.y);
     
+    //ship
     rotate(angle);
     strokeWeight(1);
     line(-15, -10, 15, 0);
@@ -105,6 +107,7 @@ class Spaceship {
     ellipseMode(CENTER);
     arc(-44, 0, 60, 60, -0.34, 0.34);
     
+    //flame
     if(accelerating){
       translate(-15, 0);
       line(0, -6, -11-2*sin(frameCount*2), 0);

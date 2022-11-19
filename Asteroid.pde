@@ -24,11 +24,18 @@ class Asteroid {
   }
 
   void update() {
-    position.x += speed*cos(angle);
-    position.y += speed*sin(angle);
+    position.x = (position.x + speed*cos(angle)) % width;
+    position.y = (position.y + speed*sin(angle)) % height;
+    if (position.x < 0) {
+      position.x = width + position.x;
+    }
+    if (position.y < 0) {
+      position.y = height + position.y;
+    }
   }
 
   void drawToScreen() {
+    //println("x="+position.x+", y="+position.y);
     pushMatrix();
     translate(position.x, position.y);
 
