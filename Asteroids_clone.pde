@@ -10,14 +10,13 @@ boolean shoot = false;
 //Configuration
 
 int defaultNumLives = 3;
-float waveAsteroidCount = 4; //How many asteroids are there in the wave
+float waveAsteroidCount = 2; //How many asteroids are there in the wave
 float waveMultiplier = 1.2; //how many more asteroids will be spawned each time.
 
 //Game State
 int score = 0;
 int lives = defaultNumLives;
 int currentWave = 0; //Which wave are we in
-
 
 final int STATE_TITLESCREEN = 1;
 final int STATE_GAME = 2;
@@ -27,6 +26,7 @@ int state;
 boolean blinkState = true;
 float timer1; //used in title for blinking, and gameover to drive returning to title. Also used in game for wait time after a wave is complete.
 float timer2;
+boolean displayWave = false;
 
 void setup() {
   size(600, 600);
@@ -43,6 +43,7 @@ void draw() {
     drawTitleScreen();
     break;
   case STATE_GAME:
+    updateGame();
     drawGame();
     break;
   case STATE_GAMEOVER:
@@ -68,32 +69,41 @@ void drawTitleScreen() {
   background(0);
   fill(255);
   textSize(30);
-  text("Asteroids", 220, 200);
+  text("Asteroids", (width-textWidth("Asteroids"))/2, 200);
   if (blinkState) {
     textSize(20);
-    text("Press any button to start", 180, 300);
+    text("Press any button to start", (width-textWidth("Press any button to start"))/2, 300);
   }
 }
 
-void drawGame() {
-  background(0);
-  stroke(255);
-  noFill();
-
-  //PERFORM ALL UPDATE OPERATIONS
-  //Check waves If we havent started yet, or the current wave is complete, may have to respawn
+void updateGame() {
+  //Initialize with first wave when game starts (wave==0)
   if (currentWave == 0 && asteroids.size() == 0){
-     currentWave=1;
-     for (int i = 0; i < waveAsteroidCount; i++){
-       asteroids.add(new Asteroid(random(0, width), random(0, height)));
+     if (timer1 > 0){
+         timer1 -= 1/(float)frameRate;
+         displayWave=true;
+         println("Text");
      }
-     timer1 = 2.0;
+     else {
+       currentWave=1;
+       for (int i = 0; i < waveAsteroidCount; i++){
+         
+         asteroids.add(new Asteroid(random(0, width), random(0, height)));
+       }
+       timer1 = 2.0;
+     }
   }
-  else if (currentWave > 0 && asteroids.size() == 0){ //next wave
+  
+  //PERFORM ALL UPDATE OPERATIONS
+  //If no andoids are left, go to next wave
+  else if (currentWave > 0 && asteroids.size() == 0){
       if (timer1 > 0){
          timer1 -= 1/(float)frameRate;
+         displayWave=true;
+         println("Text");
       }
       else if (timer1 < 0 && timer1 > -1){ //Timer has expired, start a new wave
+         displayWave=false;
          currentWave++;
          waveAsteroidCount=waveAsteroidCount*waveMultiplier;
          int currentWaveAsteroids = floor(waveAsteroidCount);
@@ -128,9 +138,21 @@ void drawGame() {
       Bullet bullet = bullets.get(k);
 
       if (asteroid.isCollidingWith(bullet)) {
+        
+        //remove the bullet and add the score.
         bullets.remove(bullet);
-        asteroids.remove(asteroid); //this is wrong, should split!
         score += asteroid.getScore();
+        
+        //Split or destroy the asteroid
+        if (asteroid.isSplittable()){
+           Asteroid newRoid = asteroid.split();
+           asteroids.add(newRoid);
+        }
+        else {
+            asteroids.remove(asteroid);
+        }
+         
+        
       }
     }
 
@@ -146,8 +168,14 @@ void drawGame() {
       bullets.add(bullet);
     }
   }
+}
 
+void drawGame(){
   //DRAW EVERYTHING TO THE SCREEN
+  background(0);
+  stroke(255);
+  noFill();
+  
   ship.drawToScreen();
   for (Bullet bullet : bullets) {
     bullet.drawToScreen();
@@ -158,6 +186,17 @@ void drawGame() {
   textSize(20);
   text(score, 80, 80);
   displayLives();
+  
+  if (displayWave){
+     displayWave(); 
+  }
+}
+
+void displayWave(){
+  fill(255);
+  textSize(20);
+
+  text("WAVE " + currentWave, width/2-textWidth("WAVE " + currentWave)/2.0, height/2.0);
 }
 
 /**
@@ -190,8 +229,6 @@ void drawGameOver() {
   text("Game Over", width/2-textWidth("Game Over")/2.0, 200);
 }
 
-
-
 /**
  * Use this function to initialise and clean up all
  * variables when switching into a new state
@@ -210,6 +247,7 @@ void setState(int newState) {
     timer1=1.0;
     break;
   case STATE_GAME:
+    timer1= 2;
     lives = defaultNumLives;
     break;
   case STATE_GAMEOVER:
