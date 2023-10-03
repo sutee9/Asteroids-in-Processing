@@ -4,17 +4,18 @@ class Particle {
   PVector acceleration;
   float lifespan;
 
-  Particle(PVector l, PVector v, PVector a) {
+  Particle(PVector l, PVector v, PVector a, int lifespan) {
     location = l.copy();
-    acceleration = a.copy();
     velocity = v.copy();
-    lifespan = 50;
+    acceleration = a.copy();
+    this.lifespan = lifespan;
   }
 
   void update() {
+    //println("life=" +lifespan+ ", loc="+location+", vel="+velocity);
     velocity.add(acceleration);
     location.add(velocity);
-    lifespan -= 4.0;
+    lifespan -= 1.0;
   }
   
   boolean isDead(){
@@ -22,8 +23,10 @@ class Particle {
   }
 
   void display() {
+    pushMatrix();
     stroke(255);
-    fill(175);
+    strokeWeight(2);
     line(location.x, location.y, location.x+velocity.x, location.y+velocity.y);
+    popMatrix();
   }
 }

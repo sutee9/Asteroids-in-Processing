@@ -28,16 +28,26 @@ float timer1; //used in title for blinking, and gameover to drive returning to t
 float timer2;
 boolean displayWave = false;
 
+AudioManager audioMgr;
+
+//ParticleSystem p = new ParticleSystem();
+
 void setup() {
   size(600, 600);
   frameRate(60);
+  audioMgr= new AudioManager(this);
+  
   ship = new Spaceship(width/2, height/2);
+  
   bullets = new ArrayList<Bullet>();
   asteroids = new ArrayList<Asteroid>();
+
   setState(STATE_TITLESCREEN);
 }
 
 void draw() {
+
+
   switch(state) {
   case STATE_TITLESCREEN:
     drawTitleScreen();
@@ -57,7 +67,7 @@ void drawTitleScreen() {
   if (keyPressed) {
     setState(STATE_GAME);
   }
- 
+
   if (timer1 > 0) { //timer1 is used for blinking the button text
     timer1 = timer1-1/(float)frameRate;
   } else {
@@ -74,46 +84,44 @@ void drawTitleScreen() {
     textSize(20);
     text("Press any button to start", (width-textWidth("Press any button to start"))/2, 300);
   }
+  //p.run();
 }
 
 void updateGame() {
   //Initialize with first wave when game starts (wave==0)
-  if (currentWave == 0 && asteroids.size() == 0){
-     if (timer1 > 0){
-         timer1 -= 1/(float)frameRate;
-         displayWave=true;
-         println("Text");
-     }
-     else {
-       currentWave=1;
-       for (int i = 0; i < waveAsteroidCount; i++){
-         
-         asteroids.add(new Asteroid(random(0, width), random(0, height)));
-       }
-       timer1 = 2.0;
-     }
+  if (currentWave == 0 && asteroids.size() == 0) {
+    if (timer1 > 0) {
+      timer1 -= 1/(float)frameRate;
+      displayWave=true;
+    } else {
+      displayWave=false;
+      currentWave=1;
+      for (int i = 0; i < waveAsteroidCount; i++) {
+
+        asteroids.add(new Asteroid(random(0, width), random(0, height)));
+      }
+      timer1 = 2.0;
+    }
   }
-  
+
   //PERFORM ALL UPDATE OPERATIONS
   //If no andoids are left, go to next wave
-  else if (currentWave > 0 && asteroids.size() == 0){
-      if (timer1 > 0){
-         timer1 -= 1/(float)frameRate;
-         displayWave=true;
-         println("Text");
+  else if (currentWave > 0 && asteroids.size() == 0) {
+    if (timer1 > 0) {
+      timer1 -= 1/(float)frameRate;
+      displayWave=true;
+    } else if (timer1 < 0 && timer1 > -1) { //Timer has expired, start a new wave
+      displayWave=false;
+      currentWave++;
+      waveAsteroidCount=waveAsteroidCount*waveMultiplier;
+      int currentWaveAsteroids = floor(waveAsteroidCount);
+      for (int a=0; a < currentWaveAsteroids; a++) {
+        asteroids.add(new Asteroid(random(0, width), random(0, height)));
       }
-      else if (timer1 < 0 && timer1 > -1){ //Timer has expired, start a new wave
-         displayWave=false;
-         currentWave++;
-         waveAsteroidCount=waveAsteroidCount*waveMultiplier;
-         int currentWaveAsteroids = floor(waveAsteroidCount);
-         for (int a=0; a < currentWaveAsteroids; a++){
-             asteroids.add(new Asteroid(random(0, width), random(0, height)));
-         }
-         timer1=2.0;
-      }
+      timer1=2.0;
+    }
   }
-  
+
   //Check level
   if (lives <= 0) {
     setState(STATE_GAMEOVER);
@@ -138,21 +146,18 @@ void updateGame() {
       Bullet bullet = bullets.get(k);
 
       if (asteroid.isCollidingWith(bullet)) {
-        
+
         //remove the bullet and add the score.
         bullets.remove(bullet);
         score += asteroid.getScore();
-        
+
         //Split or destroy the asteroid
-        if (asteroid.isSplittable()){
-           Asteroid newRoid = asteroid.split();
-           asteroids.add(newRoid);
+        if (asteroid.isSplittable()) {
+          Asteroid newRoid = asteroid.split();
+          asteroids.add(newRoid);
+        } else {
+          asteroids.remove(asteroid.destroy());
         }
-        else {
-            asteroids.remove(asteroid);
-        }
-         
-        
       }
     }
 
@@ -170,12 +175,12 @@ void updateGame() {
   }
 }
 
-void drawGame(){
+void drawGame() {
   //DRAW EVERYTHING TO THE SCREEN
   background(0);
   stroke(255);
   noFill();
-  
+
   ship.drawToScreen();
   for (Bullet bullet : bullets) {
     bullet.drawToScreen();
@@ -186,17 +191,17 @@ void drawGame(){
   textSize(20);
   text(score, 80, 80);
   displayLives();
-  
-  if (displayWave){
-     displayWave(); 
+
+  if (displayWave) {
+    displayWave();
   }
 }
 
-void displayWave(){
+void displayWave() {
   fill(255);
   textSize(20);
 
-  text("WAVE " + currentWave, width/2-textWidth("WAVE " + currentWave)/2.0, height/2.0);
+  text("WAVE " + (currentWave+1), width/2-textWidth("WAVE " + currentWave)/2.0, (height-100)/2.0);
 }
 
 /**
@@ -206,9 +211,12 @@ void displayWave(){
 void displayLives() {
   pushMatrix();
   translate(87, 110);
+  noFill();
   float spacing = 17.0;
+
   for (int i = 0; i < lives; i++) {
     strokeWeight(1);
+
     line(i*spacing -7, 12, i*spacing, -12);
     line(i*spacing + 7, 12, i*spacing, -12);
     ellipseMode(CENTER);

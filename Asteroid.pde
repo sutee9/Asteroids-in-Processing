@@ -1,6 +1,6 @@
 class Asteroid {
   float speed;
-  
+
   final float SPEED_3 = 1;
   final float SPEED_2 = 2;
   final float SPEED_1 = 3;
@@ -13,13 +13,20 @@ class Asteroid {
   int sizeClass = 3; //3 for a big asteroid, 2 = medium, 1 = small, and 0 = disappear.
 
   float[] points = new float[8];
-  
+
   //
   Asteroid(float x, float y, float angle, int sizeClass) {
+
+    //Setup the asteroid
     this.position = new PVector(x, y);
     this.angle=angle;
     setSizeClass(sizeClass);
     adjustSpeed();
+
+    //Make sure the sounds exist
+    audioMgr.loadFile("expS", "explosionsmall.wav");
+    audioMgr.loadFile("expM", "explosionmedium.wav");
+    audioMgr.loadFile("expL", "explosionbig.wav");
   }
 
   //A big Asteroid, with random angle, random speed
@@ -29,16 +36,16 @@ class Asteroid {
     setSizeClass(sizeClass);
     adjustSpeed();
   }
-  
-  void setSizeClass(int newSizeClass){
-      this.sizeClass = newSizeClass;
 
-      //Create a random outline of the rock (points measures the distance from the center of the rock)
-      for (int i = 0; i < points.length; i++){
-         points[i] = random(0.7, 1);
-         println(points[i]);
-      }
-      points[0]=random(0.2, 0.6); //makes the form a bit more interesting
+  void setSizeClass(int newSizeClass) {
+    this.sizeClass = newSizeClass;
+
+    //Create a random outline of the rock (points measures the distance from the center of the rock)
+    for (int i = 0; i < points.length; i++) {
+      points[i] = random(0.7, 1);
+      //println(points[i]);
+    }
+    points[0]=random(0.2, 0.6); //makes the form a bit more interesting
   }
 
   void update() {
@@ -57,12 +64,14 @@ class Asteroid {
     pushMatrix();
     translate(position.x, position.y);
     rotate(angle);
+
+    noFill();
     strokeWeight(1);
     stroke(255);
     beginShape();
     float angleIncrement = TWO_PI/(float)points.length;
     float a=0;
-    for (int i=0; i < points.length; i++){
+    for (int i=0; i < points.length; i++) {
       a+=angleIncrement;
       //println("angle"+i+"="+a);
       vertex(sizeClass*SIZE_MULTIPLIER*cos(a)*points[i], sizeClass*SIZE_MULTIPLIER*sin(a)*points[i]);
@@ -84,29 +93,44 @@ class Asteroid {
       return 20;
     }
   }
-  
+
   //Can this Android be split? If not, it would be destroyed upon shooting it.
-  boolean isSplittable(){
-     return sizeClass > 1;
+  boolean isSplittable() {
+    return sizeClass > 1;
   }
-  
+
+  Asteroid destroy() {
+    audioMgr.play("expS");
+    return this;
+  }
+
   //Splits the asteroid in two parts and returns the new one
-  Asteroid split(){
-      //Create a new Asteroid
-      Asteroid newRoid = new Asteroid(position.x, position.y, this.angle+0.55, sizeClass-1); //about 30° change in movement direction.
-      
-      //Deviate the old one
-      this.angle = angle - 0.55;
-      setSizeClass(sizeClass - 1);
-      adjustSpeed();
-      
-      return newRoid;
+  Asteroid split() {
+    //Create a new Asteroid
+    Asteroid newRoid = new Asteroid(position.x, position.y, this.angle+0.55, sizeClass-1); //about 30° change in movement direction.
+
+    //Deviate the old one
+    this.angle = angle - 0.55;
+    switch(sizeClass) {
+    case 3:
+      audioMgr.play("expL");
+      break;
+    case 2:
+      audioMgr.play("expM");
+      break;
+    case 1:
+      println("why did we get so far? Should never split a size 1 asteroid");
+    }
+    setSizeClass(sizeClass - 1);
+    adjustSpeed();
+
+    return newRoid;
   }
 
   //Change the speed to match the size class.
-  //Note: If called without previously changing size class, the speed will change within the range 
+  //Note: If called without previously changing size class, the speed will change within the range
   //of a random factor.
-  void adjustSpeed(){
+  void adjustSpeed() {
     switch(sizeClass) {
     case 3:
       speed = SPEED_3;
@@ -131,10 +155,9 @@ class Asteroid {
   }
 
   boolean isCollidingWith(Spaceship ship) {
-    if (ship.isInvulnerable()){
-       return false; 
-    }
-    else {
+    if (ship.isInvulnerable()) {
+      return false;
+    } else {
       //Be very generous when it comes to player collisions.
       if (dist(ship.position.x, ship.position.y, this.position.x, this.position.y) < sizeClass*SIZE_MULTIPLIER*1.5) {
         return true;

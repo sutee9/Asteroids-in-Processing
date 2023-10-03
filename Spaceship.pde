@@ -15,30 +15,40 @@ class Spaceship {
   float gunCooldown = gunCooldownTime;
   float respawnTimer = 0;
 
+  ParticleSystem explode;
+
   Spaceship(float x, float y) {
     position = new PVector(x, y);
     force = new PVector();
+    
+    audioMgr.loadFile("thruster", "thrust.wav");
+    audioMgr.loadFile("shoot", "shoot.wav");
+    audioMgr.loadFile("shipexplode", "shipexplode.wav");
   }
 
   void update() {
-    if (gunCooldown > 0){
-       gunCooldown--; 
+    if (gunCooldown > 0) {
+      gunCooldown--;
     }
-    
+
     //Check if we have recently died and have to respawn the ship
-    if (respawnTimer > 0){
-       respawnTimer--;
-       if (respawnTimer <= 0){
-          respawnShip(); 
-       }
+    if (respawnTimer > 0) {
+      respawnTimer--;
+
+      if (respawnTimer <= 0) {
+        respawnShip();
+      }
     }
-    
+
     //Process Movement
     if (forward) {
       force.x += accel*cos(angle);
       force.y += accel*sin(angle);
       accelerating = true;
+      audioMgr.loop("thruster");
+      
     } else {
+      audioMgr.stop("thruster");
       accelerating=false;
     }
     //Position
@@ -62,61 +72,66 @@ class Spaceship {
     }
     angle = angle% TWO_PI;
   }
-  
+
   /**
    * Resets all the variables so that the ship returns into neutral position.
    */
-  void respawnShip(){
-     position.x = width/2;
-     position.y = height/2;
-     force.x = 0.0;
-     force.y = 0.0;
-     angle = 0;
+  void respawnShip() {
+    position.x = width/2;
+    position.y = height/2;
+    force.x = 0.0;
+    force.y = 0.0;
+    angle = 0;
   }
   /**
    * Shoots a bullet in the direction the ship is facing and returns it
    */
-  Bullet shoot(){
-    if (gunCooldown <= 0){
+  Bullet shoot() {
+    if (gunCooldown <= 0) {
       gunCooldown = gunCooldownTime;
+      audioMgr.play("shoot");
       return new Bullet(position.x+cos(angle)*gunOrigin, position.y+sin(angle)*gunOrigin, angle);
-    }
-    else {
-       return null; 
+    } else {
+      return null;
     }
   }
-  
-  boolean isInvulnerable(){
-    //println("Ship is invulnerable="+ (respawnTimer > 0)); 
+
+  boolean isInvulnerable() {
+    //println("Ship is invulnerable="+ (respawnTimer > 0));
     return respawnTimer > 0;
   }
 
   //Draw the ship to the screen
   void drawToScreen() {
-    if (isInvulnerable()){ //Don't draw the ship if it is invulnerable. TODO: This isn't cute. I should show it.
-       return; 
+    if (isInvulnerable()) { //Don't draw the ship if it is invulnerable. TODO: This isn't cute. I should show it.
+      explode.run();
+      return;
     }
     pushMatrix();
     translate(position.x, position.y);
-    
-    //ship
     rotate(angle);
+
+    //ship
+    noFill();
     strokeWeight(1);
     line(-15, -10, 15, 0);
     line(-15, 10, 15, 0);
     ellipseMode(CENTER);
     arc(-44, 0, 60, 60, -0.34, 0.34);
-    
+
     //flame
-    if(accelerating){
+    if (accelerating) {
       translate(-15, 0);
       line(0, -6, -11-2*sin(frameCount*2), 0);
       line(0, 6, -11-2*sin(frameCount*2), 0);
     }
-    popMatrix(); 
+    popMatrix();
   }
-  
-  void destroy(){
-      respawnTimer = respawnTime;
+
+  void destroy() {
+    respawnTimer = respawnTime;
+    audioMgr.play("shipexplode");
+    explode = new ParticleSystem();
+    explode.start(position.x, position.y, 30);
   }
 }

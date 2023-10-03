@@ -35,9 +35,12 @@ class Bullet {
 
   void drawToScreen() {
     if (alive){
-      strokeWeight(3);
-      stroke(255);
-      point(position.x, position.y);
+      pushMatrix();
+      strokeWeight(2);
+      stroke(#EAFEFF);
+      fill(255);
+      ellipse(position.x, position.y, 2, 2);
+      popMatrix();
     }
   }
 }
